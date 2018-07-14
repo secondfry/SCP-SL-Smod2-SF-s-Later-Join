@@ -4,6 +4,7 @@ using Smod2.EventHandlers;
 using Smod2.Events;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Timers;
 
 namespace SF_s_Later_Join {
@@ -15,6 +16,7 @@ namespace SF_s_Later_Join {
         private List<int> scpsToSpawn = new List<int>();
         private Timer spawnTimer = new Timer();
         private static readonly Random fakeRandom = new Random();
+        private Stopwatch roundWatch = new Stopwatch();
 
         public LJEventHandler(LaterJoin plugin) {
             this.plugin = plugin;
@@ -25,6 +27,10 @@ namespace SF_s_Later_Join {
             this.ResetPlayersSpawned();
             this.ResetTeamsSpawned();
             this.DisableTimer();
+
+            // Our own round duration watch
+            this.roundWatch.Reset();
+            this.roundWatch.Start();
 
             this.isSpawnAllowed = true;
             this.PopulateSCPsToSpawn();
@@ -200,7 +206,7 @@ namespace SF_s_Later_Join {
 
         public void OnRoundEnd(RoundEndEvent ev) {
             // OnRoundEnd bugged
-            if (ev.Round.Duration < 10) {
+            if (this.roundWatch.ElapsedMilliseconds < 10000) {
                 return;
             }
 
@@ -208,6 +214,9 @@ namespace SF_s_Later_Join {
             this.ResetPlayersSpawned();
             this.ResetTeamsSpawned();
             this.DisableTimer();
+
+            // Our own round duration watch
+            this.roundWatch.Stop();
         }
 
         private void ResetPlayersSpawned() {
