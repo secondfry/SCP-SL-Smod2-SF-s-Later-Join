@@ -107,8 +107,8 @@ namespace SF_s_Later_Join {
             player.ChangeRole((Role) roleID, true, true);
 
             this.playersSpawned.Add(player.SteamId);
-            this.teamsSpawned.Add((int) player.TeamRole.Team);
-            this.scpsToSpawn.Remove((int) player.TeamRole.Role);
+            this.teamsSpawned.Add(teamID);
+            this.scpsToSpawn.Remove(roleID);
         }
 
         private int RollTeam() {
@@ -157,7 +157,7 @@ namespace SF_s_Later_Join {
             smartQueue.Add((int) Team.SCIENTISTS);
             smartQueue.Add((int) Team.NINETAILFOX);
             
-            int teamID = smartQueue[fakeRandom.Next(0, smartQueue.Count - 1)];
+            int teamID = smartQueue[fakeRandom.Next(0, smartQueue.Count)];
             return teamID;
         }
 
@@ -180,7 +180,7 @@ namespace SF_s_Later_Join {
                     }
 
                     Random fakeRandom = new Random();
-                    return enabledSCPs[fakeRandom.Next(0, enabledSCPs.Count - 1)];
+                    return enabledSCPs[fakeRandom.Next(0, enabledSCPs.Count)];
                 case (int) Team.NINETAILFOX:
                     return (int) Role.FACILITY_GUARD;
                 case (int) Team.CHAOS_INSURGENCY:

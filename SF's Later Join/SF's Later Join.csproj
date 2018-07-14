@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SF_s_Later_Join</RootNamespace>
-    <AssemblyName>SF%27s Later Join</AssemblyName>
+    <AssemblyName>SFs.Later.Join</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
