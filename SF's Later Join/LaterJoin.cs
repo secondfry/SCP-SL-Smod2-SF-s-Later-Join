@@ -63,7 +63,7 @@ namespace SF_s_Later_Join {
                     continue;
                 }
 
-                int amount = config.GetIntValue(prefix + "amount", 1);
+                int amount = config.GetIntValue(prefix + "_amount", 1);
                 while (amount > 0) {
                     this.enabledSCPs.Add(roleID);
                     amount--;
