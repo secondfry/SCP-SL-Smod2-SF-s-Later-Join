@@ -105,7 +105,10 @@ namespace SF_s_Later_Join {
 
             this.plugin.Info("[StID " + player.SteamId + "] " + player.Name + " => [R " + roleID + "]");
             player.ChangeRole((Role) roleID, true, true);
+
             this.playersSpawned.Add(player.SteamId);
+            this.teamsSpawned.Add((int) player.TeamRole.Team);
+            this.scpsToSpawn.Remove((int) player.TeamRole.Role);
         }
 
         private int RollTeam() {
