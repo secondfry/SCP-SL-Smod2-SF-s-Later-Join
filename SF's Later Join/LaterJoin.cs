@@ -77,7 +77,7 @@ namespace SF_s_Later_Join {
 
         private void PopulateRespawnQueue() {
             IConfigFile config = ConfigManager.Manager.Config;
-            string teamIDs = config.GetStringValue("team_respawn_queue", "40143140314414041340");
+            string teamIDs = config.GetStringValue("team_respawn_queue", "4014314031441404134040143");
             foreach (char teamID in teamIDs) {
                 this.respawnQueue.Add((int) Char.GetNumericValue(teamID));
             }
