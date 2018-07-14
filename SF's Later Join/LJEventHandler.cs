@@ -63,10 +63,11 @@ namespace SF_s_Later_Join {
         }
 
         private void InitTimer(int seconds) {
-            this.spawnTimer = new Timer();
-            this.spawnTimer.Interval = seconds * 1000;
-            this.spawnTimer.AutoReset = false;
-            this.spawnTimer.Enabled = true;
+            this.spawnTimer = new Timer {
+                Interval = seconds * 1000,
+                AutoReset = false,
+                Enabled = true
+            };
             this.spawnTimer.Elapsed += delegate {
                 this.isSpawnAllowed = false;
                 this.spawnTimer.Enabled = false;
@@ -78,12 +79,12 @@ namespace SF_s_Later_Join {
             Player player = ev.Player;
 
             if (!this.isSpawnAllowed) {
-                this.plugin.Debug("[StID#" + player.SteamId + "] " + player.Name + " – spawn is no longer allowed");
+                this.plugin.Debug("[StID " + player.SteamId + "] " + player.Name + " – spawn is no longer allowed");
                 return;
             }
 
             if (this.playersSpawned.Contains(player.SteamId)) {
-                this.plugin.Debug("[StID#" + player.SteamId + "] " + player.Name + " has already spawned this round");
+                this.plugin.Debug("[StID " + player.SteamId + "] " + player.Name + " has already spawned this round");
                 return;
             }
 
@@ -98,11 +99,11 @@ namespace SF_s_Later_Join {
 
             if (roleID == (int) Role.UNASSIGNED) {
                 // Unlucky
-                this.plugin.Info("[StID#" + player.SteamId + "] " + player.Name + " is unlucky");
+                this.plugin.Info("[StID " + player.SteamId + "] " + player.Name + " is unlucky");
                 return;
             }
 
-            this.plugin.Info("[StID#" + player.SteamId + "] " + player.Name + " => [R#" + roleID + "]");
+            this.plugin.Info("[StID " + player.SteamId + "] " + player.Name + " => [R " + roleID + "]");
             player.ChangeRole((Role) roleID, true, true);
             this.playersSpawned.Add(player.SteamId);
         }
