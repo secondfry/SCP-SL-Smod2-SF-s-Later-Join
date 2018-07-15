@@ -33,10 +33,7 @@ namespace SF_s_Later_Join {
         }
 
         public override void Register() {
-            LJEventHandler eventHandler = new LJEventHandler(this);
-            AddEventHandler(typeof(IEventHandlerPlayerJoin), eventHandler);
-            AddEventHandler(typeof(IEventHandlerRoundStart), eventHandler);
-            AddEventHandler(typeof(IEventHandlerRoundEnd), eventHandler);
+            this.AddEventHandlers(new LJEventHandler(this));
             AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, Smod2.Config.SettingType.NUMERIC, true, "Amount of time for player to join and still spawn after round start"));
         }
 

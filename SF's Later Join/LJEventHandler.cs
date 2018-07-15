@@ -8,13 +8,13 @@ using System.Diagnostics;
 using System.Timers;
 
 namespace SF_s_Later_Join {
-    class LJEventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd {
+    class LJEventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerSetRole {
         private LaterJoin plugin;
         private bool isSpawnAllowed = false;
         private List<string> playersSpawned = new List<string>();
         private List<int> teamsSpawned = new List<int>();
         private List<int> scpsToSpawn = new List<int>();
-        private Timer spawnTimer = new Timer();
+        private Timer delayedSpawnTimer = new Timer();
         private static readonly Random fakeRandom = new Random();
         private Stopwatch roundWatch = new Stopwatch();
 
@@ -23,10 +23,9 @@ namespace SF_s_Later_Join {
         }
 
         public void OnRoundStart(RoundStartEvent ev) {
-            // OnRoundEnd bugged
             this.ResetPlayersSpawned();
             this.ResetTeamsSpawned();
-            this.DisableTimer();
+            this.StopDelayedSpawnTimer();
 
             // Our own round duration watch
             this.roundWatch.Reset();
@@ -34,8 +33,7 @@ namespace SF_s_Later_Join {
 
             this.isSpawnAllowed = true;
             this.PopulateSCPsToSpawn();
-            this.IterateCurrentPlayers(ev);
-            this.CheckStartTimer();
+            this.StartDelayedSpawnTimer();
         }
 
         private void PopulateSCPsToSpawn() {
@@ -43,47 +41,43 @@ namespace SF_s_Later_Join {
             this.scpsToSpawn = new List<int>(enabledSCPs);
         }
 
-        private void IterateCurrentPlayers(RoundStartEvent ev) {
-            foreach (Player player in ev.Server.GetPlayers()) {
-                // Check if player actually spawned
-                if ((int) player.TeamRole.Role == -1) {
-                    continue;
-                }
-
-                // Add each player to list of already spawned players
-                this.playersSpawned.Add(player.SteamId);
-                // Add each player team to list of teams in game
-                this.teamsSpawned.Add((int) player.TeamRole.Team);
-                // Remove each player role from list of SCPs to spawn
-                this.scpsToSpawn.Remove((int) player.TeamRole.Role);
+        public void OnSetRole(PlayerSetRoleEvent ev) {
+            if (ev.Role == Role.SPECTATOR) {
+                return;
             }
+
+            // Add each player to list of already spawned players
+            this.playersSpawned.Add(ev.Player.SteamId);
+            // Add each player team to list of teams in game
+            this.teamsSpawned.Add((int) ev.TeamRole.Team);
+            // Remove each player role from list of SCPs to spawn
+            this.scpsToSpawn.Remove((int) ev.Role);
         }
 
-        private void CheckStartTimer() {
+        private void StartDelayedSpawnTimer() {
             int seconds = ConfigManager.Manager.Config.GetIntValue("sf_lj_time", 120);
             if (seconds < 0) {
                 return;
             }
 
-            this.InitTimer(seconds);
-        }
-
-        private void InitTimer(int seconds) {
-            this.spawnTimer = new Timer {
+            this.delayedSpawnTimer = new Timer {
                 Interval = seconds * 1000,
                 AutoReset = false,
                 Enabled = true
             };
-            this.spawnTimer.Elapsed += delegate {
+            this.delayedSpawnTimer.Elapsed += delegate {
                 this.isSpawnAllowed = false;
-                this.spawnTimer.Enabled = false;
+                this.delayedSpawnTimer.Enabled = false;
                 this.plugin.Debug("Timer elapsed.");
             };
         }
 
         public void OnPlayerJoin(PlayerJoinEvent ev) {
             Player player = ev.Player;
+            this.AttemptSpawnPlayer(player);
+        }
 
+        private void AttemptSpawnPlayer(Player player) {
             if (!this.isSpawnAllowed) {
                 this.plugin.Debug("[StID " + player.SteamId + "] " + player.Name + " – spawn is no longer allowed");
                 return;
@@ -110,11 +104,7 @@ namespace SF_s_Later_Join {
             }
 
             this.plugin.Info("[StID " + player.SteamId + "] " + player.Name + " => [R " + roleID + "]");
-            player.ChangeRole((Role) roleID, true, true);
-
-            this.playersSpawned.Add(player.SteamId);
-            this.teamsSpawned.Add(teamID);
-            this.scpsToSpawn.Remove(roleID);
+            player.ChangeRole((Role) roleID);
         }
 
         private int RollTeam() {
@@ -162,7 +152,7 @@ namespace SF_s_Later_Join {
             smartQueue.Add((int) Team.CLASSD);
             smartQueue.Add((int) Team.SCIENTISTS);
             smartQueue.Add((int) Team.NINETAILFOX);
-            
+
             int teamID = smartQueue[fakeRandom.Next(0, smartQueue.Count)];
             return teamID;
         }
@@ -205,7 +195,6 @@ namespace SF_s_Later_Join {
         }
 
         public void OnRoundEnd(RoundEndEvent ev) {
-            // OnRoundEnd bugged
             if (this.roundWatch.ElapsedMilliseconds < 10000) {
                 return;
             }
@@ -213,9 +202,8 @@ namespace SF_s_Later_Join {
             this.isSpawnAllowed = false;
             this.ResetPlayersSpawned();
             this.ResetTeamsSpawned();
-            this.DisableTimer();
+            this.StopDelayedSpawnTimer();
 
-            // Our own round duration watch
             this.roundWatch.Stop();
         }
 
@@ -227,8 +215,8 @@ namespace SF_s_Later_Join {
             this.teamsSpawned = new List<int>();
         }
 
-        private void DisableTimer() {
-            this.spawnTimer.Enabled = false;
+        private void StopDelayedSpawnTimer() {
+            this.delayedSpawnTimer.Enabled = false;
         }
     }
 }
