@@ -8,7 +8,12 @@ using System.Diagnostics;
 using System.Timers;
 
 namespace SF_s_Later_Join {
-    class LJEventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerSetRole {
+    public class LJEventHandler : IEventHandlerPlayerJoin,
+                                  IEventHandlerRoundStart,
+                                  IEventHandlerRoundEnd,
+                                  IEventHandlerSetRole,
+                                  IEventHandlerLCZDecontaminate,
+                                  IEventHandlerWarheadDetonate {
         private LaterJoin plugin;
         private bool isSpawnAllowed = false;
         private List<string> playersSpawned = new List<string>();
@@ -17,6 +22,8 @@ namespace SF_s_Later_Join {
         private Timer delayedSpawnTimer = new Timer();
         private static readonly Random fakeRandom = new Random();
         private Stopwatch roundWatch = new Stopwatch();
+        private bool isLCZDecontaminated = false;
+        private bool isWarheadDetonated = false;
 
         public LJEventHandler(LaterJoin plugin) {
             this.plugin = plugin;
@@ -32,18 +39,24 @@ namespace SF_s_Later_Join {
             this.roundWatch.Start();
 
             this.isSpawnAllowed = true;
+            this.isLCZDecontaminated = false;
+            this.isWarheadDetonated = false;
             this.PopulateSCPsToSpawn();
             this.StartDelayedSpawnTimer();
         }
 
         private void PopulateSCPsToSpawn() {
-            List<int> enabledSCPs = this.plugin.getEnabledSCPs();
+            List<int> enabledSCPs = this.plugin.GetEnabledSCPs();
             this.scpsToSpawn = new List<int>(enabledSCPs);
         }
 
         public void OnSetRole(PlayerSetRoleEvent ev) {
             if (ev.Role == Role.SPECTATOR) {
-                return;
+                if (this.roundWatch.ElapsedMilliseconds > 10000) {
+                    return;
+                }
+
+                ev.Role = (Role) this.SelectRole();
             }
 
             // Add each player to list of already spawned players
@@ -51,6 +64,7 @@ namespace SF_s_Later_Join {
             // Add each player team to list of teams in game
             this.teamsSpawned.Add((int) ev.TeamRole.Team);
             // Remove each player role from list of SCPs to spawn
+            this.scpsToSpawn.Remove((int) ev.TeamRole.Role);
             this.scpsToSpawn.Remove((int) ev.Role);
         }
 
@@ -77,7 +91,7 @@ namespace SF_s_Later_Join {
             this.AttemptSpawnPlayer(player);
         }
 
-        private void AttemptSpawnPlayer(Player player) {
+        public void AttemptSpawnPlayer(Player player) {
             if (!this.isSpawnAllowed) {
                 this.plugin.Debug("[StID " + player.SteamId + "] " + player.Name + " – spawn is no longer allowed");
                 return;
@@ -88,14 +102,11 @@ namespace SF_s_Later_Join {
                 return;
             }
 
-            int teamID = this.RollTeam();
-            int roleID = LJEventHandler.GetClassID(teamID, this.scpsToSpawn);
-            int i = 0;
-            while (roleID == (int) Role.UNASSIGNED && i < 5) {
-                teamID = this.RollTeam();
-                roleID = LJEventHandler.GetClassID(teamID, this.scpsToSpawn);
-                i++;
-            }
+            this.SpawnPlayer(player);
+        }
+
+        public void SpawnPlayer(Player player) {
+            int roleID = this.SelectRole();
 
             if (roleID == (int) Role.UNASSIGNED) {
                 // Unlucky
@@ -107,9 +118,24 @@ namespace SF_s_Later_Join {
             player.ChangeRole((Role) roleID);
         }
 
+        public int SelectRole() {
+            int teamID = this.RollTeam();
+            int roleID = LJEventHandler.GetClassID(teamID, this.scpsToSpawn);
+            roleID = this.MutateRoleByAvailability(roleID);
+            int i = 0;
+            while (roleID == (int) Role.UNASSIGNED && i < 5) {
+                teamID = this.RollTeam();
+                roleID = LJEventHandler.GetClassID(teamID, this.scpsToSpawn);
+                roleID = this.MutateRoleByAvailability(roleID);
+                i++;
+            }
+
+            return roleID;
+        }
+
         private int RollTeam() {
             IConfigFile config = ConfigManager.Manager.Config;
-            List<int> respawnQueue = this.plugin.getRespawnQueue();
+            List<int> respawnQueue = this.plugin.GetRespawnQueue();
             int teamID;
 
             bool isUsingSmartPicker = config.GetBoolValue("smart_class_picker", false);
@@ -140,7 +166,7 @@ namespace SF_s_Later_Join {
 
         private int RollTeamSmart() {
             // This is fake smart
-            List<int> smartQueue = new List<int>(this.plugin.getRespawnQueue());
+            List<int> smartQueue = new List<int>(this.plugin.GetRespawnQueue());
             foreach (int spawnedTeamID in this.teamsSpawned) {
                 smartQueue.Remove(spawnedTeamID);
             }
@@ -192,6 +218,63 @@ namespace SF_s_Later_Join {
             }
 
             return (int) Role.UNASSIGNED;
+        }
+
+        // SCPs should be handled by OnDecontaminate and OnDetonate events themselves
+        private int MutateRoleByAvailability(int roleID) {
+            if (this.isWarheadDetonated) {
+                switch (roleID) {
+                    case (int) Role.FACILITY_GUARD:
+                        return (int) Role.NTF_CADET;
+                    case (int) Role.CHAOS_INSUGENCY:
+                        return (int) Role.CHAOS_INSUGENCY;
+                    case (int) Role.SCIENTIST:
+                        return (int) Role.NTF_SCIENTIST;
+                    case (int) Role.CLASSD:
+                        return (int) Role.CHAOS_INSUGENCY;
+                    case (int) Role.SPECTATOR:
+                        return (int) Role.SPECTATOR;
+                    case (int) Role.TUTORIAL:
+                        break;
+                    default:
+                        return roleID;
+                }
+
+                return (int) Role.UNASSIGNED;
+            }
+
+            if (this.isLCZDecontaminated) {
+                switch (roleID) {
+                    case (int) Role.FACILITY_GUARD:
+                        return (int) Role.FACILITY_GUARD;
+                    case (int) Role.CHAOS_INSUGENCY:
+                        return (int) Role.CHAOS_INSUGENCY;
+                    case (int) Role.SCIENTIST:
+                        return (int) Role.FACILITY_GUARD;
+                    case (int) Role.CLASSD:
+                        return (int) Role.CHAOS_INSUGENCY;
+                    case (int) Role.SPECTATOR:
+                        return (int) Role.SPECTATOR;
+                    case (int) Role.TUTORIAL:
+                        break;
+                    default:
+                        return roleID;
+                }
+
+                return (int) Role.UNASSIGNED;
+            }
+
+            return roleID;
+        }
+
+        public void OnDecontaminate() {
+            this.scpsToSpawn.Remove((int) Role.SCP_173);
+            this.isLCZDecontaminated = true;
+        }
+
+        public void OnDetonate() {
+            this.scpsToSpawn.Clear();
+            this.isWarheadDetonated = true;
         }
 
         public void OnRoundEnd(RoundEndEvent ev) {

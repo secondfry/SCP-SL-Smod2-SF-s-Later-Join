@@ -4,6 +4,7 @@ using Smod2.Attributes;
 using Smod2.EventHandlers;
 using System;
 using System.Collections.Generic;
+using System.Timers;
 
 namespace SF_s_Later_Join {
     [PluginDetails(
@@ -19,6 +20,7 @@ namespace SF_s_Later_Join {
     public class LaterJoin : Plugin {
         private List<int> enabledSCPs = new List<int>();
         private List<int> respawnQueue = new List<int>();
+        private LJEventHandler ljEventHandler = null;
 
         public override void OnDisable() {
             this.ResetEnabledSCPs();
@@ -27,13 +29,23 @@ namespace SF_s_Later_Join {
         }
 
         public override void OnEnable() {
-            this.PopulateEnabledSCPs();
-            this.PopulateRespawnQueue();
+            // At the moment of enabling plugins, config is not yet populated
+            // *facepalm*
+            Timer readConfigTimer = new Timer {
+                Interval = 3000,
+                AutoReset = false,
+                Enabled = true
+            };
+            readConfigTimer.Elapsed += delegate {
+                this.PopulateEnabledSCPs();
+                this.PopulateRespawnQueue();
+            };
             this.Info(this.Details.name + " has been enabled.");
         }
 
         public override void Register() {
-            this.AddEventHandlers(new LJEventHandler(this));
+            this.ljEventHandler = new LJEventHandler(this);
+            this.AddEventHandlers(this.ljEventHandler);
             AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, Smod2.Config.SettingType.NUMERIC, true, "Amount of time for player to join and still spawn after round start"));
         }
 
@@ -103,12 +115,16 @@ namespace SF_s_Later_Join {
             return -1;
         }
 
-        public List<int> getEnabledSCPs() {
+        public List<int> GetEnabledSCPs() {
             return this.enabledSCPs;
         }
 
-        public List<int> getRespawnQueue() {
+        public List<int> GetRespawnQueue() {
             return this.respawnQueue;
+        }
+
+        public LJEventHandler GetLJEventHandler() {
+            return this.ljEventHandler;
         }
     }
 }
