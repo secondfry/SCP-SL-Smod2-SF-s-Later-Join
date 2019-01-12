@@ -28,6 +28,7 @@ namespace SF_s_Later_Join {
     private bool isLCZDecontaminated = false;
     private bool isWarheadDetonated = false;
     private bool isPickupAllowed = true;
+    private bool isCountingSpawns = true;
 
     public LJEventHandler(LaterJoin plugin) {
       this.plugin = plugin;
@@ -35,15 +36,29 @@ namespace SF_s_Later_Join {
     }
 
     public void OnWaitingForPlayers(WaitingForPlayersEvent ev) {
+      // Initially disallow pickups for pre-round
       this.isPickupAllowed = false;
+      // ...and stop remembering spawned players for pre-round
+      this.isCountingSpawns = false;
+      // ...and lock SCP-173 door so he can't cheese it on pre-round
       this.LockDoor173();
+      // Reset other initial state parts
+      this.isSpawnAllowed = true;
+      this.isLCZDecontaminated = false;
+      this.isWarheadDetonated = false;
 
+      // Populate SCPs to spawn in the round
+      this.PopulateSCPsToSpawn();
+
+      // Reset round duration watch
+      this.roundWatch.Reset();
+
+      // Overkill clean-up (probably already happened in previous round OnRoundEnd)
       this.ResetPlayersSpawned();
       this.ResetTeamsSpawned();
-      this.StopDelayedSpawnTimer();
 
-      // Our own round duration watch
-      this.roundWatch.Reset();
+      // Overkill timer stop (probably already happened in previous round OnRoundEnd)
+      this.StopDelayedSpawnTimer();
     }
 
     public void LockDoor173() {
@@ -52,7 +67,10 @@ namespace SF_s_Later_Join {
     }
 
     public void OnPreRoundStart(PreRoundStartEvent ev) {
+      // Allow pickups just before round starts
       this.isPickupAllowed = true;
+      // ...and start remembering who spawned on what role
+      this.isCountingSpawns = true;
     }
 
     public void OnPlayerPickupItem(PlayerPickupItemEvent ev) {
@@ -60,12 +78,10 @@ namespace SF_s_Later_Join {
     }
 
     public void OnRoundStart(RoundStartEvent ev) {
-      // Our own round duration watch
+      // Start round duration watch
       this.roundWatch.Start();
 
-      this.isSpawnAllowed = true;
-      this.isLCZDecontaminated = false;
-      this.isWarheadDetonated = false;
+      // Start delayed spawn timer
       this.StartDelayedSpawnTimer();
     }
 
@@ -89,6 +105,10 @@ namespace SF_s_Later_Join {
         if (ev.Role == Role.UNASSIGNED) {
           ev.Role = Role.SPECTATOR;
         }
+      }
+
+      if (!this.isCountingSpawns) {
+        return;
       }
 
       // Add each player to list of already spawned players
@@ -317,14 +337,18 @@ namespace SF_s_Later_Join {
         return;
       }
 
+      // Disable spawning after round have ended
       this.isSpawnAllowed = false;
-      this.ResetPlayersSpawned();
-      this.ResetTeamsSpawned();
+
+      // Stop the timer for disabling spawns
       this.StopDelayedSpawnTimer();
 
-      this.roundWatch.Stop();
+      // Clear spawned tables
+      this.ResetPlayersSpawned();
+      this.ResetTeamsSpawned();
 
-      this.PopulateSCPsToSpawn();
+      // Stop round watch
+      this.roundWatch.Stop();
     }
 
     private void ResetPlayersSpawned() {
