@@ -27,8 +27,8 @@ namespace SF_s_Later_Join {
     private Stopwatch roundWatch = new Stopwatch();
     private bool isLCZDecontaminated = false;
     private bool isWarheadDetonated = false;
-    private bool isPickupAllowed = true;
-    private bool isCountingSpawns = true;
+    private bool isWaitingForActualRoundToStart = false;
+    private bool isExploringEnabled = false;
 
     public LJEventHandler(LaterJoin plugin) {
       this.plugin = plugin;
@@ -36,14 +36,22 @@ namespace SF_s_Later_Join {
     }
 
     public void OnWaitingForPlayers(WaitingForPlayersEvent ev) {
-      // Initially disallow pickups for pre-round
-      this.isPickupAllowed = false;
-      // ...and stop remembering spawned players for pre-round
-      this.isCountingSpawns = false;
+      // Initially disallow pickups
+      // and don't remember spawned players
+      // until actual round starts
+      this.isWaitingForActualRoundToStart = true;
       // ...and lock SCP-173 door so he can't cheese it on pre-round
       this.LockDoor173();
-      // Reset other initial state parts
+
+      // There are two mechanics in play for each joined player
+      // OnPlayerJoin event will AttemptSpawnPlayer, so...
+      // ...let's allow spawns for the round!
       this.isSpawnAllowed = true;
+      // OnSetRole event will happen until round starts with forced Spectrator role, so...
+      // ...let's check if exploring before round started is enabled
+      this.isExploringEnabled = ConfigManager.Manager.Config.GetBoolValue("sf_lj_explore", false);
+
+      // Reset map state
       this.isLCZDecontaminated = false;
       this.isWarheadDetonated = false;
 
@@ -67,14 +75,11 @@ namespace SF_s_Later_Join {
     }
 
     public void OnPreRoundStart(PreRoundStartEvent ev) {
-      // Allow pickups just before round starts
-      this.isPickupAllowed = true;
-      // ...and start remembering who spawned on what role
-      this.isCountingSpawns = true;
+      this.isWaitingForActualRoundToStart = false;
     }
 
     public void OnPlayerPickupItem(PlayerPickupItemEvent ev) {
-      ev.Allow = this.isPickupAllowed;
+      ev.Allow = this.isWaitingForActualRoundToStart;
     }
 
     public void OnRoundStart(RoundStartEvent ev) {
@@ -92,11 +97,11 @@ namespace SF_s_Later_Join {
 
     public void OnSetRole(PlayerSetRoleEvent ev) {
       if (ev.Role == Role.SPECTATOR) {
+        // Stop respawning players after 10 seconds into the round
+        // ...and don't spawn them before round starts if exploring is disabled
         if (this.roundWatch.ElapsedMilliseconds > 10000) {
           return;
-        }
-
-        if (!ConfigManager.Manager.Config.GetBoolValue("sf_lj_explore", false)) {
+        } else if (!this.isExploringEnabled) {
           return;
         }
 
@@ -107,7 +112,7 @@ namespace SF_s_Later_Join {
         }
       }
 
-      if (!this.isCountingSpawns) {
+      if (!this.isWaitingForActualRoundToStart) {
         return;
       }
 
@@ -139,6 +144,11 @@ namespace SF_s_Later_Join {
     }
 
     public void OnPlayerJoin(PlayerJoinEvent ev) {
+      // Don't spawn players before actual round if exploring is disabled
+      if (this.isWaitingForActualRoundToStart && !this.isExploringEnabled) {
+        return;
+      }
+
       Player player = ev.Player;
       this.AttemptSpawnPlayer(player);
     }
