@@ -362,11 +362,11 @@ namespace SF_s_Later_Join {
     }
 
     private void ResetPlayersSpawned() {
-      this.playersSpawned = new List<string>();
+      this.playersSpawned.Clear();
     }
 
     private void ResetTeamsSpawned() {
-      this.teamsSpawned = new List<int>();
+      this.teamsSpawned.Clear();
     }
 
     private void StopDelayedSpawnTimer() {
