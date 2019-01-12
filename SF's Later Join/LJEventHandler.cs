@@ -27,7 +27,7 @@ namespace SF_s_Later_Join {
     private Stopwatch roundWatch = new Stopwatch();
     private bool isLCZDecontaminated = false;
     private bool isWarheadDetonated = false;
-    private bool isWaitingForActualRoundToStart = false;
+    private bool isActualRoundStarted = false;
     private bool isExploringEnabled = false;
 
     public LJEventHandler(LaterJoin plugin) {
@@ -39,7 +39,7 @@ namespace SF_s_Later_Join {
       // Initially disallow pickups
       // and don't remember spawned players
       // until actual round starts
-      this.isWaitingForActualRoundToStart = true;
+      this.isActualRoundStarted = false;
       // ...and lock SCP-173 door so he can't cheese it on pre-round
       this.LockDoor173();
 
@@ -75,11 +75,11 @@ namespace SF_s_Later_Join {
     }
 
     public void OnPreRoundStart(PreRoundStartEvent ev) {
-      this.isWaitingForActualRoundToStart = false;
+      this.isActualRoundStarted = true;
     }
 
     public void OnPlayerPickupItem(PlayerPickupItemEvent ev) {
-      ev.Allow = this.isWaitingForActualRoundToStart;
+      ev.Allow = this.isActualRoundStarted;
     }
 
     public void OnRoundStart(RoundStartEvent ev) {
@@ -112,7 +112,7 @@ namespace SF_s_Later_Join {
         }
       }
 
-      if (!this.isWaitingForActualRoundToStart) {
+      if (!this.isActualRoundStarted) {
         return;
       }
 
@@ -145,7 +145,7 @@ namespace SF_s_Later_Join {
 
     public void OnPlayerJoin(PlayerJoinEvent ev) {
       // Don't spawn players before actual round if exploring is disabled
-      if (this.isWaitingForActualRoundToStart && !this.isExploringEnabled) {
+      if (this.isActualRoundStarted && !this.isExploringEnabled) {
         return;
       }
 
