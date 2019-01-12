@@ -8,16 +8,25 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
 		Different Target Directory|Any CPU = Different Target Directory|Any CPU
+		Different Target Directory|x64 = Different Target Directory|x64
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Debug|Any CPU.ActiveCfg = Release|Any CPU
 		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Debug|x64.ActiveCfg = Debug|x64
+		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Debug|x64.Build.0 = Debug|x64
 		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Different Target Directory|Any CPU.ActiveCfg = Different Target Directory|Any CPU
 		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Different Target Directory|Any CPU.Build.0 = Different Target Directory|Any CPU
+		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Different Target Directory|x64.ActiveCfg = Different Target Directory|x64
+		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Different Target Directory|x64.Build.0 = Different Target Directory|x64
 		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Release|x64.ActiveCfg = Release|x64
+		{90C90B64-DDC1-4002-95D9-D5C35D665B64}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

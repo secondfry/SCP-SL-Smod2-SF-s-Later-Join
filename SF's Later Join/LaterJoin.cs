@@ -18,7 +18,7 @@ namespace SF_s_Later_Join {
         SmodRevision = 7
         )]
     public class LaterJoin : Plugin {
-        private List<int> enabledSCPs = new List<int>();
+        private List<Role> enabledSCPs = new List<Role>();
         private List<int> respawnQueue = new List<int>();
         private LJEventHandler ljEventHandler = null;
 
@@ -47,6 +47,7 @@ namespace SF_s_Later_Join {
             this.ljEventHandler = new LJEventHandler(this);
             this.AddEventHandlers(this.ljEventHandler);
             AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, Smod2.Config.SettingType.NUMERIC, true, "Amount of time for player to join and still spawn after round start"));
+            AddConfig(new Smod2.Config.ConfigSetting("sf_lj_explore", false, Smod2.Config.SettingType.BOOL, true, "Allows player to explore the map before game start"));
         }
 
         private void PopulateEnabledSCPs() {
@@ -66,22 +67,22 @@ namespace SF_s_Later_Join {
                     continue;
                 }
 
-                int roleID = LaterJoin.ConvertSCPPrefixToRoleID(prefix);
-                if (roleID == -1) {
+                Role role = LaterJoin.ConvertSCPPrefixToRoleID(prefix);
+                if (role == Role.UNASSIGNED) {
                     this.Error("Trying to convert unknown prefix: " + prefix);
                     continue;
                 }
 
                 int amount = config.GetIntValue(prefix + "_amount", 1);
                 while (amount > 0) {
-                    this.enabledSCPs.Add(roleID);
+                    this.enabledSCPs.Add(role);
                     amount--;
                 }
             }
         }
 
         private void ResetEnabledSCPs() {
-            this.enabledSCPs = new List<int>();
+            this.enabledSCPs = new List<Role>();
         }
 
         private void PopulateRespawnQueue() {
@@ -96,26 +97,26 @@ namespace SF_s_Later_Join {
             this.respawnQueue = new List<int>();
         }
 
-        private static int ConvertSCPPrefixToRoleID(string prefix) {
+        private static Role ConvertSCPPrefixToRoleID(string prefix) {
             switch (prefix) {
                 case "scp049":
-                    return (int) Role.SCP_049;
+                    return Role.SCP_049;
                 case "scp096":
-                    return (int) Role.SCP_096;
+                    return Role.SCP_096;
                 case "scp106":
-                    return (int) Role.SCP_106;
+                    return Role.SCP_106;
                 case "scp173":
-                    return (int) Role.SCP_173;
+                    return Role.SCP_173;
                 case "scp939_53":
-                    return (int) Role.SCP_939_53;
+                    return Role.SCP_939_53;
                 case "scp939_89":
-                    return (int) Role.SCP_939_89;
+                    return Role.SCP_939_89;
             }
 
-            return -1;
+            return Role.UNASSIGNED;
         }
 
-        public List<int> GetEnabledSCPs() {
+        public List<Role> GetEnabledSCPs() {
             return this.enabledSCPs;
         }
 
