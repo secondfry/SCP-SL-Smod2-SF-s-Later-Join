@@ -104,6 +104,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\DisableCommand.cs" />
+    <Compile Include="Commands\EnableCommand.cs" />
+    <Compile Include="Commands\ReloadCommand.cs" />
     <Compile Include="LaterJoin.cs" />
     <Compile Include="LJEventHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
