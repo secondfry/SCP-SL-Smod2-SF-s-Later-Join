@@ -1,4 +1,4 @@
-﻿using Smod2;
+using Smod2;
 using Smod2.API;
 using Smod2.EventHandlers;
 using Smod2.Events;
@@ -412,6 +412,11 @@ namespace SF_s_Later_Join {
 
     private void StopDelayedSpawnTimer() {
       this.delayedSpawnTimer.Enabled = false;
+    }
+
+    public LJEventHandler SetIsPluginDisabledThisRound(bool value) {
+      this.isPluginDisabledThisRound = value;
+      return this;
     }
   }
 }

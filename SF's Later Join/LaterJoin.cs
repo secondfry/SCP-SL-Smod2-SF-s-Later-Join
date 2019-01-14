@@ -1,4 +1,5 @@
-﻿using Smod2;
+using SF_s_Later_Join.Commands;
+using Smod2;
 using Smod2.API;
 using Smod2.Attributes;
 using System;
@@ -47,12 +48,17 @@ namespace SF_s_Later_Join {
     public override void Register() {
       this.ljEventHandler = new LJEventHandler(this);
       this.AddEventHandlers(this.ljEventHandler);
+
       this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_disable", false, Smod2.Config.SettingType.BOOL, true, "Disables Second_Fry's Later Join"));
       this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, Smod2.Config.SettingType.NUMERIC, true, "Amount of time for player to join and still spawn after round start"));
       this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_explore", false, Smod2.Config.SettingType.BOOL, true, "Allows player to explore the map before game start"));
+
+      this.AddCommand("sf_lj_disable", new DisableCommand(this));
+      this.AddCommand("sf_lj_enable", new EnableCommand(this));
+      this.AddCommand("sf_lj_reload", new ReloadCommand(this));
     }
 
-    private void CheckIfDisabled() {
+    public void CheckIfDisabled() {
       IConfigFile config = ConfigManager.Manager.Config;
       this.isDisabled = config.GetBoolValue("sf_lj_disable", false);
     }
@@ -128,6 +134,11 @@ namespace SF_s_Later_Join {
 
     public bool GetIsDisabled() {
       return this.isDisabled;
+    }
+
+    public LaterJoin SetIsDisabled(bool value) {
+      this.isDisabled = value;
+      return this;
     }
 
     public List<Role> GetEnabledSCPs() {
