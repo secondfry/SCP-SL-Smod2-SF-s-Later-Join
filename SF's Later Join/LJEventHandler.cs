@@ -33,7 +33,6 @@ namespace SF_s_Later_Join {
 
     public LJEventHandler(LaterJoin plugin) {
       this.plugin = plugin;
-      this.PopulateSCPsToSpawn();
     }
 
     public void OnWaitingForPlayers(WaitingForPlayersEvent ev) {
