@@ -90,7 +90,7 @@ namespace SF_s_Later_Join {
     }
 
     private void ResetEnabledSCPs() {
-      this.enabledSCPs = new List<Role>();
+      this.enabledSCPs.Clear();
     }
 
     private void PopulateRespawnQueue() {
@@ -102,7 +102,7 @@ namespace SF_s_Later_Join {
     }
 
     private void ResetRespawnQueue() {
-      this.respawnQueue = new List<int>();
+      this.respawnQueue.Clear();
     }
 
     private static Role ConvertSCPPrefixToRoleID(string prefix) {
