@@ -47,9 +47,9 @@ namespace SF_s_Later_Join {
     public override void Register() {
       this.ljEventHandler = new LJEventHandler(this);
       this.AddEventHandlers(this.ljEventHandler);
-      AddConfig(new Smod2.Config.ConfigSetting("sf_lj_disable", false, Smod2.Config.SettingType.BOOL, true, "Disables Second_Fry's Later Join"));
-      AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, Smod2.Config.SettingType.NUMERIC, true, "Amount of time for player to join and still spawn after round start"));
-      AddConfig(new Smod2.Config.ConfigSetting("sf_lj_explore", false, Smod2.Config.SettingType.BOOL, true, "Allows player to explore the map before game start"));
+      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_disable", false, Smod2.Config.SettingType.BOOL, true, "Disables Second_Fry's Later Join"));
+      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, Smod2.Config.SettingType.NUMERIC, true, "Amount of time for player to join and still spawn after round start"));
+      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_explore", false, Smod2.Config.SettingType.BOOL, true, "Allows player to explore the map before game start"));
     }
 
     private void CheckIfDisabled() {
