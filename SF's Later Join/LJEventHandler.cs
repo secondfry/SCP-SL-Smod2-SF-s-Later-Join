@@ -18,6 +18,7 @@ namespace SF_s_Later_Join {
                                 IEventHandlerLCZDecontaminate,
                                 IEventHandlerWarheadDetonate {
     private LaterJoin plugin;
+    private bool isPluginDisabledThisRound = false;
     private bool isSpawnAllowed = false;
     private List<string> playersSpawned = new List<string>();
     private List<int> teamsSpawned = new List<int>();
@@ -36,6 +37,11 @@ namespace SF_s_Later_Join {
     }
 
     public void OnWaitingForPlayers(WaitingForPlayersEvent ev) {
+      this.isPluginDisabledThisRound = this.plugin.GetIsDisabled();
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       // Initially disallow pickups
       // and don't remember spawned players
       // until actual round starts
@@ -75,14 +81,26 @@ namespace SF_s_Later_Join {
     }
 
     public void OnPreRoundStart(PreRoundStartEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       this.isActualRoundStarted = true;
     }
 
     public void OnPlayerPickupItem(PlayerPickupItemEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       ev.Allow = this.isActualRoundStarted;
     }
 
     public void OnRoundStart(RoundStartEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       // OnPlayerJoin event will AttemptSpawnPlayer, so...
       // ...let's allow spawns for the round!
       this.isSpawnAllowed = true;
@@ -100,6 +118,10 @@ namespace SF_s_Later_Join {
     }
 
     public void OnSetRole(PlayerSetRoleEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       if (ev.Role == Role.SPECTATOR) {
         // Stop respawning players after 10 seconds into the round
         // ...and don't spawn them before round starts if exploring is disabled
@@ -148,6 +170,10 @@ namespace SF_s_Later_Join {
     }
 
     public void OnPlayerJoin(PlayerJoinEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       // Don't spawn players before actual round if exploring is disabled
       if (this.isActualRoundStarted && !this.isExploringEnabled) {
         return;
@@ -337,16 +363,28 @@ namespace SF_s_Later_Join {
     }
 
     public void OnDecontaminate() {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       this.scpsToSpawn.Remove(Role.SCP_173);
       this.isLCZDecontaminated = true;
     }
 
     public void OnDetonate() {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       this.scpsToSpawn.Clear();
       this.isWarheadDetonated = true;
     }
 
     public void OnRoundEnd(RoundEndEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       if (this.roundWatch.ElapsedMilliseconds < 10000) {
         return;
       }
