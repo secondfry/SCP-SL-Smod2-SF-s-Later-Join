@@ -44,9 +44,9 @@ namespace SF_s_Later_Join {
       this.LockDoor173();
 
       // There are two mechanics in play for each joined player
-      // OnPlayerJoin event will AttemptSpawnPlayer, so...
-      // ...let's allow spawns for the round!
-      this.isSpawnAllowed = true;
+      // OnPlayerJoin event will AttemptSpawnPlayer, but...
+      // ...we only want to spawn them this way after OnRoundStart
+      this.isSpawnAllowed = false;
       // OnSetRole event will happen until round starts with forced Spectrator role, so...
       // ...let's check if exploring before round started is enabled
       this.isExploringEnabled = ConfigManager.Manager.Config.GetBoolValue("sf_lj_explore", false);
@@ -83,6 +83,10 @@ namespace SF_s_Later_Join {
     }
 
     public void OnRoundStart(RoundStartEvent ev) {
+      // OnPlayerJoin event will AttemptSpawnPlayer, so...
+      // ...let's allow spawns for the round!
+      this.isSpawnAllowed = true;
+
       // Start round duration watch
       this.roundWatch.Start();
 
@@ -156,7 +160,7 @@ namespace SF_s_Later_Join {
     public void AttemptSpawnPlayer(Player player) {
       if (!this.isSpawnAllowed) {
         player.ChangeRole(Role.SPECTATOR);
-        this.plugin.Debug("[StID " + player.SteamId + "] " + player.Name + " – spawn is no longer allowed");
+        this.plugin.Debug("[StID " + player.SteamId + "] " + player.Name + " – spawn is either not yet or no longer allowed");
         return;
       }
 
