@@ -1,4 +1,4 @@
-﻿using Smod2;
+using Smod2;
 using Smod2.API;
 using Smod2.EventHandlers;
 using Smod2.Events;
@@ -16,6 +16,7 @@ namespace SF_s_Later_Join {
                                 IEventHandlerLCZDecontaminate,
                                 IEventHandlerWarheadDetonate {
     private LaterJoin plugin;
+    private bool isPluginDisabledThisRound = false;
     private bool isSpawnAllowed = false;
     private List<string> playersSpawned = new List<string>();
     private List<int> teamsSpawned = new List<int>();
@@ -28,10 +29,16 @@ namespace SF_s_Later_Join {
 
     public LJEventHandler(LaterJoin plugin) {
       this.plugin = plugin;
-      this.PopulateSCPsToSpawn();
     }
 
     public void OnWaitingForPlayers(WaitingForPlayersEvent ev) {
+      this.isPluginDisabledThisRound = this.plugin.GetIsDisabled();
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
+      // OnPlayerJoin event will AttemptSpawnPlayer, but...
+      // ...we only want to spawn them this way after OnRoundStart
       this.isSpawnAllowed = false;
 
       // Reset map state
@@ -58,6 +65,10 @@ namespace SF_s_Later_Join {
     }
 
     public void OnRoundStart(RoundStartEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       // OnPlayerJoin event will AttemptSpawnPlayer, so...
       // ...let's allow spawns for the round!
       this.isSpawnAllowed = true;
@@ -75,6 +86,10 @@ namespace SF_s_Later_Join {
     }
 
     public void OnSetRole(PlayerSetRoleEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       if (ev.Role == Role.SPECTATOR) {
         return;
       }
@@ -107,6 +122,10 @@ namespace SF_s_Later_Join {
     }
 
     public void OnPlayerJoin(PlayerJoinEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       Player player = ev.Player;
       this.AttemptSpawnPlayer(player);
     }
@@ -114,7 +133,7 @@ namespace SF_s_Later_Join {
     public void AttemptSpawnPlayer(Player player) {
       if (!this.isSpawnAllowed) {
         player.ChangeRole(Role.SPECTATOR);
-        this.plugin.Debug("[StID " + player.SteamId + "] " + player.Name + " – spawn is no longer allowed");
+        this.plugin.Debug("[StID " + player.SteamId + "] " + player.Name + " – spawn is either not yet or no longer allowed");
         return;
       }
 
@@ -291,16 +310,28 @@ namespace SF_s_Later_Join {
     }
 
     public void OnDecontaminate() {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       this.scpsToSpawn.Remove(Role.SCP_173);
       this.isLCZDecontaminated = true;
     }
 
     public void OnDetonate() {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       this.scpsToSpawn.Clear();
       this.isWarheadDetonated = true;
     }
 
     public void OnRoundEnd(RoundEndEvent ev) {
+      if (this.isPluginDisabledThisRound) {
+        return;
+      }
+
       if (this.roundWatch.ElapsedMilliseconds < 10000) {
         return;
       }
@@ -329,6 +360,11 @@ namespace SF_s_Later_Join {
 
     private void StopDelayedSpawnTimer() {
       this.delayedSpawnTimer.Enabled = false;
+    }
+
+    public LJEventHandler SetIsPluginDisabledThisRound(bool value) {
+      this.isPluginDisabledThisRound = value;
+      return this;
     }
   }
 }

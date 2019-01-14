@@ -1,4 +1,5 @@
-﻿using Smod2;
+using SF_s_Later_Join.Commands;
+using Smod2;
 using Smod2.API;
 using Smod2.Attributes;
 using System;
@@ -17,6 +18,7 @@ namespace SF_s_Later_Join {
         SmodRevision = 7
         )]
   public class LaterJoin : Plugin {
+    private bool isDisabled = false;
     private List<Role> enabledSCPs = new List<Role>();
     private List<int> respawnQueue = new List<int>();
     private LJEventHandler ljEventHandler = null;
@@ -36,6 +38,7 @@ namespace SF_s_Later_Join {
         Enabled = true
       };
       readConfigTimer.Elapsed += delegate {
+        this.CheckIfDisabled();
         this.PopulateEnabledSCPs();
         this.PopulateRespawnQueue();
       };
@@ -45,8 +48,19 @@ namespace SF_s_Later_Join {
     public override void Register() {
       this.ljEventHandler = new LJEventHandler(this);
       this.AddEventHandlers(this.ljEventHandler);
-      AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, Smod2.Config.SettingType.NUMERIC, true, "Amount of time for player to join and still spawn after round start"));
-      AddConfig(new Smod2.Config.ConfigSetting("sf_lj_explore", false, Smod2.Config.SettingType.BOOL, true, "Allows player to explore the map before game start"));
+
+      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_disable", false, Smod2.Config.SettingType.BOOL, true, "Disables Second_Fry's Later Join"));
+      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, Smod2.Config.SettingType.NUMERIC, true, "Amount of time for player to join and still spawn after round start"));
+      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_explore", false, Smod2.Config.SettingType.BOOL, true, "Allows player to explore the map before game start"));
+
+      this.AddCommand("sf_lj_disable", new DisableCommand(this));
+      this.AddCommand("sf_lj_enable", new EnableCommand(this));
+      this.AddCommand("sf_lj_reload", new ReloadCommand(this));
+    }
+
+    public void CheckIfDisabled() {
+      IConfigFile config = ConfigManager.Manager.Config;
+      this.isDisabled = config.GetBoolValue("sf_lj_disable", false);
     }
 
     private void PopulateEnabledSCPs() {
@@ -82,7 +96,7 @@ namespace SF_s_Later_Join {
     }
 
     private void ResetEnabledSCPs() {
-      this.enabledSCPs = new List<Role>();
+      this.enabledSCPs.Clear();
     }
 
     private void PopulateRespawnQueue() {
@@ -94,7 +108,7 @@ namespace SF_s_Later_Join {
     }
 
     private void ResetRespawnQueue() {
-      this.respawnQueue = new List<int>();
+      this.respawnQueue.Clear();
     }
 
     private static Role ConvertSCPPrefixToRoleID(string prefix) {
@@ -116,6 +130,15 @@ namespace SF_s_Later_Join {
       }
 
       return Role.UNASSIGNED;
+    }
+
+    public bool GetIsDisabled() {
+      return this.isDisabled;
+    }
+
+    public LaterJoin SetIsDisabled(bool value) {
+      this.isDisabled = value;
+      return this;
     }
 
     public List<Role> GetEnabledSCPs() {
