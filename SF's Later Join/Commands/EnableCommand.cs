@@ -13,7 +13,7 @@ namespace SF_s_Later_Join.Commands {
     }
 
     public string GetUsage() {
-      return "sf_lf_enable";
+      return "sf_lj_enable";
     }
 
     public string[] OnCall(ICommandSender sender, string[] args) {

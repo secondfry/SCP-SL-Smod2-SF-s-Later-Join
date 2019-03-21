@@ -24,34 +24,31 @@ namespace SF_s_Later_Join {
     private LJEventHandler ljEventHandler = null;
 
     public override void OnDisable() {
+      this.Debug("[OnDisable] Disabling");
+
       this.ResetEnabledSCPs();
       this.ResetRespawnQueue();
-      this.Info(this.Details.name + " has been disabled.");
+
+      this.Info("[OnDisable] Disabled");
     }
 
     public override void OnEnable() {
-      // At the moment of enabling plugins, config is not yet populated
-      // *facepalm*
-      Timer readConfigTimer = new Timer {
-        Interval = 3000,
-        AutoReset = false,
-        Enabled = true
-      };
-      readConfigTimer.Elapsed += delegate {
-        this.CheckIfDisabled();
-        this.PopulateEnabledSCPs();
-        this.PopulateRespawnQueue();
-      };
-      this.Info(this.Details.name + " has been enabled.");
+      this.Debug("[OnEnable] Enabling");
+
+      this.CheckIfDisabled();
+      this.PopulateEnabledSCPs();
+      this.PopulateRespawnQueue();
+
+      this.Info("[OnEnable] Enabled");
     }
 
     public override void Register() {
       this.ljEventHandler = new LJEventHandler(this);
       this.AddEventHandlers(this.ljEventHandler);
 
-      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_disable", false, Smod2.Config.SettingType.BOOL, true, "Disables Second_Fry's Later Join"));
-      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, Smod2.Config.SettingType.NUMERIC, true, "Amount of time for player to join and still spawn after round start"));
-      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_explore", false, Smod2.Config.SettingType.BOOL, true, "Allows player to explore the map before game start"));
+      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_disable", false, true, "Disables Second_Fry's Later Join"));
+      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_time", 120, true, "Amount of time for player to join and still spawn after round start"));
+      this.AddConfig(new Smod2.Config.ConfigSetting("sf_lj_explore", false, true, "Allows player to explore the map before game start"));
 
       this.AddCommand("sf_lj_disable", new DisableCommand(this));
       this.AddCommand("sf_lj_enable", new EnableCommand(this));

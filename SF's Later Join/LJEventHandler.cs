@@ -38,6 +38,7 @@ namespace SF_s_Later_Join {
     public void OnWaitingForPlayers(WaitingForPlayersEvent ev) {
       this.isPluginDisabledThisRound = this.plugin.GetIsDisabled();
       if (this.isPluginDisabledThisRound) {
+        this.plugin.Debug("Plugin is disabled for this round.");
         return;
       }
 
@@ -174,7 +175,7 @@ namespace SF_s_Later_Join {
       }
 
       // Don't spawn players before actual round if exploring is disabled
-      if (this.isActualRoundStarted && !this.isExploringEnabled) {
+      if (!this.isActualRoundStarted && !this.isExploringEnabled) {
         return;
       }
 
